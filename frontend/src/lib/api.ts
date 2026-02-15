@@ -18,6 +18,23 @@ import type {
   User,
   PaginatedResponse,
   PlaybookSummary,
+  MessageTemplate,
+  TemplateSummary,
+  TemplateVersion,
+  TemplatePreview,
+  TemplateCreatePayload,
+  TemplateUpdatePayload,
+  TrainingModule,
+  TrainingModuleSummary,
+  TrainingModuleCreatePayload,
+  TrainingModuleUpdatePayload,
+  Quiz,
+  QuizCreatePayload,
+  TrainingProgress,
+  AllSettings,
+  SettingsSection,
+  SettingsChangeRequestResponse,
+  SettingsAuditLogEntry,
 } from "./types";
 
 const apiClient = axios.create({
@@ -176,6 +193,114 @@ export const api = {
     },
     alerts: async (params?: AlertListParams): Promise<PaginatedResponse<AlertItem>> => {
       const { data } = await apiClient.get("/api/v1/adm/alerts", { params });
+      return data;
+    },
+  },
+
+  templates: {
+    list: async (params?: ListParams & { category?: string; status?: string }): Promise<PaginatedResponse<TemplateSummary>> => {
+      const { data } = await apiClient.get("/api/v1/templates", { params });
+      return data;
+    },
+    get: async (id: string): Promise<MessageTemplate> => {
+      const { data } = await apiClient.get(`/api/v1/templates/${id}`);
+      return data;
+    },
+    create: async (payload: TemplateCreatePayload): Promise<MessageTemplate> => {
+      const { data } = await apiClient.post("/api/v1/templates", payload);
+      return data;
+    },
+    update: async (id: string, payload: TemplateUpdatePayload): Promise<MessageTemplate> => {
+      const { data } = await apiClient.put(`/api/v1/templates/${id}`, payload);
+      return data;
+    },
+    delete: async (id: string): Promise<void> => {
+      await apiClient.delete(`/api/v1/templates/${id}`);
+    },
+    approve: async (id: string): Promise<MessageTemplate> => {
+      const { data } = await apiClient.post(`/api/v1/templates/${id}/approve`);
+      return data;
+    },
+    activate: async (id: string): Promise<MessageTemplate> => {
+      const { data } = await apiClient.post(`/api/v1/templates/${id}/activate`);
+      return data;
+    },
+    archive: async (id: string): Promise<MessageTemplate> => {
+      const { data } = await apiClient.post(`/api/v1/templates/${id}/archive`);
+      return data;
+    },
+    versions: async (id: string): Promise<TemplateVersion[]> => {
+      const { data } = await apiClient.get(`/api/v1/templates/${id}/versions`);
+      return data;
+    },
+    preview: async (id: string, language: string, params: Record<string, string>): Promise<TemplatePreview> => {
+      const { data } = await apiClient.post(`/api/v1/templates/${id}/preview`, { language, params });
+      return data;
+    },
+  },
+
+  training: {
+    modules: {
+      list: async (params?: ListParams & { topic?: string; difficulty?: string; is_active?: boolean }): Promise<PaginatedResponse<TrainingModuleSummary>> => {
+        const { data } = await apiClient.get("/api/v1/training/modules", { params });
+        return data;
+      },
+      get: async (id: string): Promise<TrainingModule> => {
+        const { data } = await apiClient.get(`/api/v1/training/modules/${id}`);
+        return data;
+      },
+      create: async (payload: TrainingModuleCreatePayload): Promise<TrainingModule> => {
+        const { data } = await apiClient.post("/api/v1/training/modules", payload);
+        return data;
+      },
+      update: async (id: string, payload: TrainingModuleUpdatePayload): Promise<TrainingModule> => {
+        const { data } = await apiClient.put(`/api/v1/training/modules/${id}`, payload);
+        return data;
+      },
+      delete: async (id: string): Promise<void> => {
+        await apiClient.delete(`/api/v1/training/modules/${id}`);
+      },
+    },
+    quiz: {
+      get: async (moduleId: string): Promise<Quiz> => {
+        const { data } = await apiClient.get(`/api/v1/training/modules/${moduleId}/quiz`);
+        return data;
+      },
+      createOrUpdate: async (moduleId: string, payload: QuizCreatePayload): Promise<Quiz> => {
+        const { data } = await apiClient.put(`/api/v1/training/modules/${moduleId}/quiz`, payload);
+        return data;
+      },
+    },
+    progress: {
+      list: async (params?: ListParams & { agent_id?: string; module_id?: string; status?: string }): Promise<PaginatedResponse<TrainingProgress>> => {
+        const { data } = await apiClient.get("/api/v1/training/progress", { params });
+        return data;
+      },
+    },
+  },
+
+  settings: {
+    getAll: async (): Promise<AllSettings> => {
+      const { data } = await apiClient.get("/api/v1/settings");
+      return data;
+    },
+    getSection: async (section: string): Promise<SettingsSection> => {
+      const { data } = await apiClient.get(`/api/v1/settings/${section}`);
+      return data;
+    },
+    requestChange: async (section: string, changes: Record<string, unknown>): Promise<SettingsChangeRequestResponse> => {
+      const { data } = await apiClient.post(`/api/v1/settings/${section}/request-change`, { changes });
+      return data;
+    },
+    verifyOtp: async (changeRequestId: string, otp: string): Promise<SettingsAuditLogEntry> => {
+      const { data } = await apiClient.post("/api/v1/settings/verify-otp", { change_request_id: changeRequestId, otp });
+      return data;
+    },
+    cancelRequest: async (section: string, changeRequestId: string): Promise<void> => {
+      await apiClient.post(`/api/v1/settings/${section}/request-change/cancel`, { change_request_id: changeRequestId });
+    },
+    auditLog: async (params?: ListParams & { section?: string }): Promise<PaginatedResponse<SettingsAuditLogEntry>> => {
+      const { data } = await apiClient.get("/api/v1/settings/audit-log", { params });
       return data;
     },
   },

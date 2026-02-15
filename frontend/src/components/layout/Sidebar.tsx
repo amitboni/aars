@@ -9,6 +9,7 @@ import {
   BarChart3,
   Play,
   Brain,
+  FileText,
   Settings,
   ChevronLeft,
   ChevronDown,
@@ -49,6 +50,15 @@ const navItems: NavItem[] = [
     ],
   },
   {
+    label: "Content",
+    href: "/content",
+    icon: <FileText className="h-5 w-5" />,
+    children: [
+      { label: "Templates", href: "/content/templates" },
+      { label: "Training", href: "/content/training" },
+    ],
+  },
+  {
     label: "Playbooks",
     href: "/playbooks",
     icon: <Play className="h-5 w-5" />,
@@ -75,7 +85,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(
-    pathname.startsWith("/analytics") ? "Analytics" : null
+    pathname.startsWith("/analytics") ? "Analytics" : pathname.startsWith("/content") ? "Content" : null
   );
 
   const userRoles = user?.roles ?? [];

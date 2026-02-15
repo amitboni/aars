@@ -332,3 +332,221 @@ export interface ApiError {
     details: Record<string, unknown>;
   };
 }
+
+// ─── Message Templates ──────────────────────────────────────────────────────
+
+export interface MessageTemplate {
+  id: string;
+  tenant_id: string;
+  name: string;
+  category: string;
+  description: string | null;
+  language_variants: Record<string, string>;
+  placeholders: string[];
+  buttons: Record<string, unknown>[];
+  status: string;
+  version: number;
+  previous_version_id: string | null;
+  meta_template_id: string | null;
+  is_default: boolean;
+  approved_by: string | null;
+  approved_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TemplateSummary {
+  id: string;
+  tenant_id: string;
+  name: string;
+  category: string;
+  description: string | null;
+  status: string;
+  version: number;
+  is_default: boolean;
+  created_at: string;
+}
+
+export interface TemplateVersion {
+  id: string;
+  version: number;
+  status: string;
+  previous_version_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TemplatePreview {
+  rendered: string;
+  buttons: Record<string, unknown>[];
+}
+
+export interface TemplateCreatePayload {
+  name: string;
+  category: string;
+  description?: string;
+  language_variants?: Record<string, string>;
+  placeholders?: string[];
+  buttons?: Record<string, unknown>[];
+  meta_template_id?: string;
+}
+
+export interface TemplateUpdatePayload {
+  name?: string;
+  category?: string;
+  description?: string;
+  language_variants?: Record<string, string>;
+  placeholders?: string[];
+  buttons?: Record<string, unknown>[];
+  meta_template_id?: string;
+}
+
+// ─── Training ───────────────────────────────────────────────────────────────
+
+export interface TrainingModule {
+  id: string;
+  tenant_id: string;
+  title: string;
+  description: string | null;
+  topic: string;
+  difficulty: string;
+  duration_minutes: number;
+  language: string;
+  content_type: string;
+  file_key: string | null;
+  file_url: string | null;
+  file_size_bytes: number | null;
+  thumbnail_key: string | null;
+  is_active: boolean;
+  is_default: boolean;
+  effectiveness_score: number;
+  times_assigned: number;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TrainingModuleSummary {
+  id: string;
+  tenant_id: string;
+  title: string;
+  topic: string;
+  difficulty: string;
+  duration_minutes: number;
+  is_active: boolean;
+  is_default: boolean;
+  times_assigned: number;
+  created_at: string;
+}
+
+export interface TrainingModuleCreatePayload {
+  title: string;
+  description?: string;
+  topic: string;
+  difficulty?: string;
+  duration_minutes: number;
+  language?: string;
+  content_type?: string;
+  file_url?: string;
+  expires_at?: string;
+}
+
+export interface TrainingModuleUpdatePayload {
+  title?: string;
+  description?: string;
+  topic?: string;
+  difficulty?: string;
+  duration_minutes?: number;
+  language?: string;
+  content_type?: string;
+  file_url?: string;
+  is_active?: boolean;
+  expires_at?: string;
+}
+
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  correct: number;
+  explanation?: string;
+}
+
+export interface Quiz {
+  id: string;
+  training_module_id: string;
+  questions: QuizQuestion[];
+  passing_score: number;
+  max_attempts: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface QuizCreatePayload {
+  questions: QuizQuestion[];
+  passing_score?: number;
+  max_attempts?: number;
+}
+
+export interface TrainingProgress {
+  id: string;
+  tenant_id: string;
+  training_module_id: string;
+  agent_id: string;
+  status: string;
+  score: number | null;
+  attempts: number;
+  started_at: string | null;
+  completed_at: string | null;
+  assigned_by: string;
+  playbook_run_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ─── Settings ───────────────────────────────────────────────────────────────
+
+export interface SettingsSection {
+  values: Record<string, unknown>;
+  metadata: Record<string, SettingFieldMetadata>;
+}
+
+export interface SettingFieldMetadata {
+  type: string;
+  description: string;
+  min?: number;
+  max?: number;
+  allowed_values?: string[];
+}
+
+export type SettingsSectionName =
+  | "lifecycle_thresholds"
+  | "engagement_scoring_weights"
+  | "contact_rules"
+  | "trai_calling_hours"
+  | "rate_limits"
+  | "branding"
+  | "languages";
+
+export type AllSettings = Partial<Record<SettingsSectionName, SettingsSection>>;
+
+export interface SettingsChangeRequestResponse {
+  change_request_id: string;
+  otp_sent_to: string;
+  expires_at: string;
+  changes_summary: Record<string, unknown>;
+}
+
+export interface SettingsAuditLogEntry {
+  id: string;
+  tenant_id: string;
+  change_request_id: string;
+  changed_by: string;
+  changed_by_email: string;
+  section: string;
+  previous_values: Record<string, unknown>;
+  new_values: Record<string, unknown>;
+  changed_fields: string[];
+  verified_at: string;
+  applied_at: string;
+  created_at: string;
+}
