@@ -151,10 +151,23 @@ async def _execute_action(
             "status": "scheduled",
         }
     elif action_type == "whatsapp_message":
+        # Resolve template from DB if possible, else use config name
+        template_name = config.get("message_template", "")
+        rendered = None
+        try:
+            from modules.channel.whatsapp.templates import render_template_from_db
+            rendered = await render_template_from_db(
+                db, run.tenant_id, template_name, "hi",
+                config.get("template_params"),
+            )
+        except Exception:
+            logger.debug("DB template lookup skipped for %s", template_name)
+
         return {
             "outcome": "executed",
             "action": "whatsapp_message",
-            "template": config.get("message_template", ""),
+            "template": template_name,
+            "rendered": rendered,
             "status": "sent",
         }
     elif action_type == "whatsapp_training":

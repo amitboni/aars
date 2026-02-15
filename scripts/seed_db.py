@@ -224,6 +224,99 @@ def seed_demo_tenant():
             playbooks_created += 1
         print(f"Playbooks: {playbooks_created} created, {len(playbooks) - playbooks_created} already existed")
 
+        # ── Message Templates ──
+        from modules.content.seed_templates import get_default_templates
+
+        templates = get_default_templates()
+        templates_created = 0
+        for tmpl in templates:
+            existing = conn.execute(
+                text("SELECT id FROM message_templates WHERE tenant_id = :tid AND name = :name AND deleted_at IS NULL"),
+                {"tid": str(DEMO_TENANT_ID), "name": tmpl["name"]},
+            ).fetchone()
+            if existing:
+                continue
+
+            tmpl_id = uuid.uuid4()
+            conn.execute(
+                text("""
+                    INSERT INTO message_templates (id, tenant_id, name, category, description,
+                        language_variants, placeholders, buttons,
+                        status, version, is_default)
+                    VALUES (:id, :tid, :name, :category, :desc,
+                        CAST(:variants AS jsonb), CAST(:placeholders AS jsonb), CAST(:buttons AS jsonb),
+                        :status, 1, true)
+                """),
+                {
+                    "id": str(tmpl_id),
+                    "tid": str(DEMO_TENANT_ID),
+                    "name": tmpl["name"],
+                    "category": tmpl["category"],
+                    "desc": tmpl.get("description", ""),
+                    "variants": json.dumps(tmpl["language_variants"]),
+                    "placeholders": json.dumps(tmpl["placeholders"]),
+                    "buttons": json.dumps(tmpl["buttons"]),
+                    "status": "active",
+                },
+            )
+            templates_created += 1
+        print(f"Templates: {templates_created} created, {len(templates) - templates_created} already existed")
+
+        # ── Training Modules ──
+        from modules.training.seed_training import get_default_training_modules
+
+        training_modules = get_default_training_modules()
+        modules_created = 0
+        for mod in training_modules:
+            existing = conn.execute(
+                text("SELECT id FROM training_modules WHERE tenant_id = :tid AND title = :title AND deleted_at IS NULL"),
+                {"tid": str(DEMO_TENANT_ID), "title": mod["title"]},
+            ).fetchone()
+            if existing:
+                continue
+
+            mod_id = uuid.uuid4()
+            conn.execute(
+                text("""
+                    INSERT INTO training_modules (id, tenant_id, title, description,
+                        topic, difficulty, duration_minutes, language, content_type,
+                        is_active, is_default)
+                    VALUES (:id, :tid, :title, :desc,
+                        :topic, :difficulty, :duration, :lang, :ctype,
+                        true, true)
+                """),
+                {
+                    "id": str(mod_id),
+                    "tid": str(DEMO_TENANT_ID),
+                    "title": mod["title"],
+                    "desc": mod.get("description", ""),
+                    "topic": mod["topic"],
+                    "difficulty": mod["difficulty"],
+                    "duration": mod["duration_minutes"],
+                    "lang": mod.get("language", "hi"),
+                    "ctype": mod.get("content_type", "video"),
+                },
+            )
+
+            # Create quiz for this module
+            if mod.get("questions"):
+                quiz_id = uuid.uuid4()
+                conn.execute(
+                    text("""
+                        INSERT INTO training_quizzes (id, training_module_id, questions, passing_score)
+                        VALUES (:id, :mod_id, CAST(:questions AS jsonb), :passing)
+                    """),
+                    {
+                        "id": str(quiz_id),
+                        "mod_id": str(mod_id),
+                        "questions": json.dumps(mod["questions"]),
+                        "passing": mod.get("passing_score", 70),
+                    },
+                )
+
+            modules_created += 1
+        print(f"Training modules: {modules_created} created, {len(training_modules) - modules_created} already existed")
+
     # ── Signals ──
     print("Generating simulated signals...")
     from scripts.simulate_signals import run_simulation

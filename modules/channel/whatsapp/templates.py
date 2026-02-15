@@ -256,3 +256,36 @@ def get_training_result_template(score: float) -> str:
         return "training_result_medium"
     else:
         return "training_result_low"
+
+
+async def render_template_from_db(
+    db,
+    tenant_id,
+    template_name: str,
+    language: str = "hi",
+    params: dict | None = None,
+) -> str | None:
+    """Render template from database. Falls back to hardcoded TEMPLATES if not found.
+
+    Args:
+        db: AsyncSession from FastAPI dependency injection.
+        tenant_id: UUID of the tenant.
+        template_name: Template name to look up.
+        language: Language code (e.g. "hi", "en").
+        params: Dict of placeholder values to substitute.
+
+    Returns:
+        Rendered message string, or None if template not found anywhere.
+    """
+    from modules.content.service import get_active_template_by_name
+
+    result = await get_active_template_by_name(db, tenant_id, template_name, language)
+    if result:
+        _template, body = result
+        if params:
+            for key, value in params.items():
+                body = body.replace(f"{{{key}}}", str(value))
+        return body
+
+    # Fall back to hardcoded TEMPLATES dict
+    return render_template(template_name, language, params)

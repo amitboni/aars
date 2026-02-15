@@ -66,6 +66,9 @@ def create_app() -> FastAPI:
     from modules.decision.router import router as decision_router
     from modules.analytics.router import router as analytics_router
     from modules.integration.router import router as integration_router
+    from modules.content.router import router as content_router
+    from modules.training.router import router as training_router
+    from modules.settings.router import router as settings_router
 
     app.include_router(user_router)
     app.include_router(tenant_router)
@@ -78,5 +81,8 @@ def create_app() -> FastAPI:
     app.include_router(decision_router)
     app.include_router(analytics_router)
     app.include_router(integration_router)
+    app.include_router(content_router)
+    app.include_router(training_router)
+    app.include_router(settings_router)
 
     return app

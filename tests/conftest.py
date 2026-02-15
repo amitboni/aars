@@ -50,6 +50,13 @@ def test_tenant() -> dict:
 
     with sync_engine.begin() as conn:
         # Clean up in dependency order (child tables first)
+        conn.execute(text("DELETE FROM settings_audit_log WHERE tenant_id = :tid"), {"tid": str(tenant_id)})
+        conn.execute(text("DELETE FROM settings_change_requests WHERE tenant_id = :tid"), {"tid": str(tenant_id)})
+        conn.execute(text("DELETE FROM template_usage_log WHERE tenant_id = :tid"), {"tid": str(tenant_id)})
+        conn.execute(text("DELETE FROM message_templates WHERE tenant_id = :tid"), {"tid": str(tenant_id)})
+        conn.execute(text("DELETE FROM training_progress WHERE tenant_id = :tid"), {"tid": str(tenant_id)})
+        conn.execute(text("DELETE FROM training_quizzes WHERE training_module_id IN (SELECT id FROM training_modules WHERE tenant_id = :tid)"), {"tid": str(tenant_id)})
+        conn.execute(text("DELETE FROM training_modules WHERE tenant_id = :tid"), {"tid": str(tenant_id)})
         conn.execute(text("DELETE FROM integration_jobs WHERE tenant_id = :tid"), {"tid": str(tenant_id)})
         conn.execute(text("DELETE FROM analytics_snapshots WHERE tenant_id = :tid"), {"tid": str(tenant_id)})
         conn.execute(text("DELETE FROM reactivation_funnels WHERE tenant_id = :tid"), {"tid": str(tenant_id)})

@@ -58,10 +58,13 @@ async def get_tenant(
 async def update_tenant_config(
     tenant_id: uuid.UUID,
     body: TenantUpdate,
-    current_user: dict = Depends(require_role("super_admin", "tenant_admin")),
+    current_user: dict = Depends(require_role("super_admin")),
     db: AsyncSession = Depends(get_db_no_tenant),
 ):
-    """Update tenant configuration. Super admin or own tenant admin."""
+    """Update tenant configuration directly. Super admin only.
+
+    DEPRECATED: Use /api/v1/settings endpoints for OTP-protected config changes.
+    """
     tenant = await service.update_tenant(db, tenant_id, body)
     await db.commit()
     return TenantResponse.model_validate(tenant)

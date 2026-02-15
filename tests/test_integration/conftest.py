@@ -10,3 +10,6 @@ import modules.adm.models  # noqa: F401
 import modules.decision.models  # noqa: F401
 import modules.analytics.models  # noqa: F401
 import modules.integration.models  # noqa: F401
+import modules.content.models  # noqa: F401
+import modules.training.models  # noqa: F401
+import modules.settings.models  # noqa: F401
