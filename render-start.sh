@@ -5,6 +5,21 @@ echo "=== Starting AARS API ==="
 echo "DATABASE_URL is set: $([ -n "$DATABASE_URL" ] && echo 'yes' || echo 'NO')"
 echo "PORT: $PORT"
 
+echo "--- Testing sync DB connection (psycopg2) ---"
+python -c "
+from config.settings import settings
+print(f'DATABASE_URL_SYNC scheme: {settings.DATABASE_URL_SYNC.split(\"@\")[0].split(\"://\")[0]}')
+print(f'DATABASE_URL_SYNC host: {settings.DATABASE_URL_SYNC.split(\"@\")[1].split(\"/\")[0] if \"@\" in settings.DATABASE_URL_SYNC else \"N/A\"}')
+from sqlalchemy import create_engine, text
+engine = create_engine(settings.DATABASE_URL_SYNC, pool_pre_ping=True)
+with engine.connect() as conn:
+    r = conn.execute(text('SELECT 1'))
+    print(f'Sync DB connection OK: {r.scalar()}')
+    r2 = conn.execute(text(\"SELECT current_user, current_database()\"))
+    row = r2.first()
+    print(f'Connected as user={row[0]} database={row[1]}')
+" 2>&1
+
 echo "--- Running database migrations ---"
 python -m alembic upgrade head 2>&1
 MIGRATE_EXIT=$?
