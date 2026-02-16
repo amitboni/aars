@@ -1,15 +1,24 @@
 #!/usr/bin/env bash
 # Render start script — run migrations, seed, then start server
-set -o errexit
 
-echo "Running database migrations..."
-alembic upgrade head
+echo "=== Starting AARS API ==="
+echo "DATABASE_URL is set: $([ -n "$DATABASE_URL" ] && echo 'yes' || echo 'NO')"
+echo "PORT: $PORT"
 
-echo "Seeding platform defaults..."
-python scripts/seed_db.py
+echo "--- Running database migrations ---"
+if ! python -m alembic upgrade head 2>&1; then
+  echo "WARNING: Migrations failed, continuing anyway..."
+fi
 
-echo "Seeding demo data..."
-python scripts/seed_db.py --demo
+echo "--- Seeding platform defaults ---"
+if ! python scripts/seed_db.py 2>&1; then
+  echo "WARNING: Default seeding failed, continuing..."
+fi
 
-echo "Starting server..."
-exec uvicorn api.app:create_app --factory --host 0.0.0.0 --port "$PORT"
+echo "--- Seeding demo data ---"
+if ! python scripts/seed_db.py --demo 2>&1; then
+  echo "WARNING: Demo seeding failed, continuing..."
+fi
+
+echo "--- Starting uvicorn ---"
+exec uvicorn api.app:create_app --factory --host 0.0.0.0 --port "${PORT:-8000}"
