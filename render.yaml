@@ -1,0 +1,32 @@
+databases:
+  - name: aars-db
+    plan: free
+    databaseName: aars
+    user: aars
+
+services:
+  - type: web
+    name: aars-api
+    runtime: python
+    plan: free
+    buildCommand: ./render-build.sh
+    startCommand: uvicorn api.app:create_app --factory --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: aars-db
+          property: connectionString
+      - key: REDIS_URL
+        value: ""
+      - key: CELERY_BROKER_URL
+        value: ""
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ENV
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: CORS_ALLOWED_ORIGINS
+        value: '["https://aars-dashboard.netlify.app"]'
+      - key: PYTHON_VERSION
+        value: "3.12.3"

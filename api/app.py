@@ -12,7 +12,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="AARS — Agent Activation & Retention System",
         version="0.1.0",
-        docs_url="/docs" if settings.DEBUG else None,
+        docs_url="/docs",
         redoc_url="/redoc" if settings.DEBUG else None,
     )
 

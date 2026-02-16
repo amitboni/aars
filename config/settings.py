@@ -1,11 +1,23 @@
 """config/settings.py — Application settings from environment variables."""
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    # Database
+    # Database — set DATABASE_URL to a postgresql:// URL and the async/sync
+    # variants are derived automatically. Or set each one explicitly.
     DATABASE_URL: str = "postgresql+asyncpg://aars:aars_dev@localhost:5432/aars"
     DATABASE_URL_SYNC: str = "postgresql+psycopg2://aars:aars_dev@localhost:5432/aars"
+
+    @model_validator(mode="after")
+    def _derive_db_urls(self) -> "Settings":
+        """If DATABASE_URL uses plain postgresql://, derive driver-specific URLs."""
+        url = self.DATABASE_URL
+        if url.startswith("postgresql://") or url.startswith("postgres://"):
+            base = url.replace("postgres://", "postgresql://", 1)
+            self.DATABASE_URL = base.replace("postgresql://", "postgresql+asyncpg://", 1)
+            self.DATABASE_URL_SYNC = base.replace("postgresql://", "postgresql+psycopg2://", 1)
+        return self
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
