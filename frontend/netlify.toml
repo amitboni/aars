@@ -1,3 +1,13 @@
 [build]
   command = "npm run build"
-  publish = ".next"
+  publish = "out"
+
+[[redirects]]
+  from = "/agents/:id/"
+  to = "/agents/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/content/templates/:id/"
+  to = "/content/templates/index.html"
+  status = 200
