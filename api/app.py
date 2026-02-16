@@ -1,11 +1,16 @@
 """api/app.py — FastAPI app factory."""
-from fastapi import FastAPI
+import logging
+import traceback
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from api.health import router as health_router
 from config.settings import settings
 from core.exceptions import AARSError
+
+logger = logging.getLogger(__name__)
 
 
 def create_app() -> FastAPI:
@@ -26,6 +31,21 @@ def create_app() -> FastAPI:
     )
 
     # Exception handlers
+    @app.exception_handler(Exception)
+    async def generic_error_handler(request: Request, exc: Exception):
+        tb = traceback.format_exception(type(exc), exc, exc.__traceback__)
+        logger.error("Unhandled exception: %s\n%s", exc, "".join(tb))
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": str(exc),
+                    "type": type(exc).__name__,
+                }
+            },
+        )
+
     @app.exception_handler(AARSError)
     async def aars_error_handler(request, exc: AARSError):
         status_map = {
