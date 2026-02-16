@@ -5,43 +5,22 @@ echo "=== Starting AARS API ==="
 echo "DATABASE_URL is set: $([ -n "$DATABASE_URL" ] && echo 'yes' || echo 'NO')"
 echo "PORT: $PORT"
 
-echo "--- Testing sync DB connection (psycopg2) ---"
-python -c "
-from config.settings import settings
-print(f'DATABASE_URL_SYNC scheme: {settings.DATABASE_URL_SYNC.split(\"@\")[0].split(\"://\")[0]}')
-print(f'DATABASE_URL_SYNC host: {settings.DATABASE_URL_SYNC.split(\"@\")[1].split(\"/\")[0] if \"@\" in settings.DATABASE_URL_SYNC else \"N/A\"}')
-from sqlalchemy import create_engine, text
-engine = create_engine(settings.DATABASE_URL_SYNC, pool_pre_ping=True)
-with engine.connect() as conn:
-    r = conn.execute(text('SELECT 1'))
-    print(f'Sync DB connection OK: {r.scalar()}')
-    r2 = conn.execute(text(\"SELECT current_user, current_database()\"))
-    row = r2.first()
-    print(f'Connected as user={row[0]} database={row[1]}')
-" 2>&1
-
 echo "--- Running database migrations ---"
-python -m alembic upgrade head 2>&1
+python -m alembic upgrade head
 MIGRATE_EXIT=$?
 if [ $MIGRATE_EXIT -ne 0 ]; then
   echo "!!! MIGRATIONS FAILED with exit code $MIGRATE_EXIT !!!"
-  echo "--- Attempting to show current alembic version ---"
-  python -m alembic current 2>&1 || true
-  echo "--- Continuing anyway (server will start but may not work) ---"
+  python -m alembic current || true
 else
   echo "--- Migrations completed successfully ---"
-  python -m alembic current 2>&1 || true
+  python -m alembic current || true
 fi
 
 echo "--- Seeding platform defaults ---"
-if ! python scripts/seed_db.py 2>&1; then
-  echo "WARNING: Default seeding failed, continuing..."
-fi
+python scripts/seed_db.py || echo "WARNING: Default seeding failed, continuing..."
 
 echo "--- Seeding demo data ---"
-if ! python scripts/seed_db.py --demo 2>&1; then
-  echo "WARNING: Demo seeding failed, continuing..."
-fi
+python scripts/seed_db.py --demo || echo "WARNING: Demo seeding failed, continuing..."
 
 echo "--- Starting uvicorn ---"
 exec uvicorn api.app:create_app --factory --host 0.0.0.0 --port "${PORT:-8000}"
