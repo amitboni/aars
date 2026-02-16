@@ -20,12 +20,15 @@ async def health():
     except Exception:
         checks["postgres"] = False
     # Redis
-    try:
-        await redis_client.ping()
-        checks["redis"] = True
-    except Exception:
-        checks["redis"] = False
+    if redis_client:
+        try:
+            await redis_client.ping()
+            checks["redis"] = True
+        except Exception:
+            checks["redis"] = False
+    else:
+        checks["redis"] = "not_configured"
 
-    healthy = all(checks.values())
+    healthy = checks["postgres"] is True
     checks["status"] = "healthy" if healthy else "degraded"
     return JSONResponse(checks, status_code=200 if healthy else 503)
