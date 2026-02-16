@@ -9,7 +9,7 @@ services:
     name: aars-api
     runtime: python
     plan: free
-    buildCommand: ./render-build.sh
+    buildCommand: bash render-build.sh
     startCommand: uvicorn api.app:create_app --factory --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
