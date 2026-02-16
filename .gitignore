@@ -45,3 +45,6 @@ miniodata/
 frontend/node_modules/
 frontend/.next/
 frontend/out/
+
+# Local Netlify folder
+.netlify

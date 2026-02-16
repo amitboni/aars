@@ -8,6 +8,8 @@ import jwt
 from fastapi import Depends, HTTPException, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy import text
+
 from config.database import async_session_factory
 from core.security import decode_jwt
 from core.tenant_context import set_context, set_rls_context_async
@@ -15,8 +17,10 @@ from core.tenant_context import set_context, set_rls_context_async
 
 async def get_db_no_tenant() -> AsyncGenerator[AsyncSession, None]:
     """Provide an async database session WITHOUT tenant RLS context.
-    Used for auth endpoints and super_admin operations that span tenants."""
+    Used for auth endpoints and super_admin operations that span tenants.
+    Sets app.rls_bypass so RLS policies allow cross-tenant access."""
     async with async_session_factory() as session:
+        await session.execute(text("SET LOCAL app.rls_bypass = 'true'"))
         try:
             yield session
         except Exception:
